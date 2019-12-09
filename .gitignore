@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+
+/scripting/*
+/.vscode
+!/scripting/TimeBonus/
+!/scripting/include/timeb.inc
+!/scripting/TimeBonus.sp
+*.dat

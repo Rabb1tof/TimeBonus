@@ -34,6 +34,6 @@
 /scripting/*
 /.vscode
 !/scripting/TimeBonus/
-!/scripting/include/timeb.inc
+!/scripting/include/timebonus.inc
 !/scripting/TimeBonus.sp
 *.dat

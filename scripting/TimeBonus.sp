@@ -1,0 +1,135 @@
+#include <sourcemod>
+#include <vip_core>
+#include <shop>
+#include <csgo_colors>
+
+#pragma newdecls required
+#pragma semicolon 1
+
+#define VERS_PLUGIN "1.0"
+
+#pragma newdecls required
+#pragma semicolon 1
+
+#define TIME_MENU 10 // time of menu (all) //
+
+public Plugin myinfo =
+{
+    author = "Rabb1t (Discord: Rabb1t#2017)",
+    name = "TimeBonus",
+    version = VERS_PLUGIN,
+    description = "Бонусы за время игры на сервере",
+    url = "https://discord.gg/gpK9k8f https://t.me/rabb1tof"
+}
+
+// global variable (from bool to Handle)
+stock int g_iAccountID[MAXPLAYERS+1], g_iBonuses[MAXPLAYERS+1], g_iTime[MAXPLAYERS+1], g_iNonFixedTime[MAXPLAYERS+1];
+Database g_hDB;
+ArrayList g_hConfig;
+
+#include "TimeBonus/convar.sp"
+//#include "TimeBonus/API.sp"
+#include "TimeBonus/config.sp"
+#include "TimeBonus/UTIL.sp"
+#include "TimeBonus/Database.sp"
+#include "TimeBonus/menu.sp"
+
+public APLRes AskPluginLoad2(Handle hMySelf, bool bLate, char[] szError, int iErrorMaxLength)
+{
+    //createAPI();
+    return APLRes_Success;
+}
+
+public void OnPluginStart()
+{
+    RegConsoleCmd("sm_bonus", command_Bonus);
+
+    HookEvent("player_team", OnPlayerChangeTeam);
+    
+    createConfig();
+    createConvars();
+    Database.Connect(createDB, "timebonus");
+
+    char szPath[PLATFORM_MAX_PATH];
+    BuildPath(Path_SM, szPath, sizeof(szPath), "configs/timebonus");
+    if(!DirExists(szPath))
+        CreateDirectory(szPath, FPERM_O_WRITE | FPERM_O_READ | FPERM_O_EXEC);
+
+    CreateTimer(1.0, checkTime, _, TIMER_REPEAT);
+}
+
+public void OnPluginEnd()
+{
+    UTIL_CleanMemory();
+}
+
+public void OnAllPluginsLoaded()
+{
+    //API_MarkAsReady(); // API ready to use
+}
+
+public Action command_Bonus(int iClient, int args)
+{
+    if(IsValidClient(iClient))
+        showMainMenu(iClient);
+
+    return Plugin_Handled;
+}
+
+public void OnPlayerChangeTeam(Event event, const char[] name, bool dbc)
+{
+    int iClient = GetClientOfUserId(event.GetInt("userid"));
+    if(IsValidClient(iClient))
+    {
+        int team    = event.GetInt("team");
+        if(team == 1)
+            CreateTimer(1.0, nonFixedTime, GetClientUserId(iClient), TIMER_REPEAT);
+    }
+}
+
+public Action nonFixedTime(Handle timer, int iClient)
+{
+    if(timer != INVALID_HANDLE)
+    {
+        iClient = GetClientOfUserId(iClient);
+        int team = GetClientTeam(iClient);
+        if(team > 1) 
+        {
+            CloseHandle(timer);
+            return Plugin_Stop;
+        }
+        ++g_iNonFixedTime[iClient];
+    }
+    return Plugin_Stop;
+}
+
+public Action checkTime(Handle timer)
+{
+    if(timer != INVALID_HANDLE)
+    {
+        int playedTime;
+        for(int iClient = 0; iClient <= MaxClients; ++iClient)
+        {
+            playedTime = UTIL_getPlayedTime(iClient); // получаем время, которое отыграл (!) игрок
+            /**
+            * TODO:
+            * Дописать тут код с проверкой времени игрока (юзать вместо лесенки из циклов - подфункции)
+            **/
+        }
+    }
+}
+
+public void OnClientAuthorized(int iClient) {
+    IsValidClient(iClient) &&
+        preLoadData(iClient);
+}
+
+public void OnClientPutInServer(int iClient) {
+    IsClientAuthorized(iClient) &&
+        preLoadData(iClient);
+}
+
+public void OnClientDisconnect(int iClient)
+{
+    saveData(iClient);
+}

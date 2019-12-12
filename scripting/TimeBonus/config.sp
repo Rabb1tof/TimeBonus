@@ -59,7 +59,7 @@ public SMCResult ConfigParser_OnEnterSection(SMCParser hSMC, const char[] szName
 		case CS_ROOT:					
 		{
 			g_hCurrentMap = new StringMap();
-			g_hCurrentMap.SetString("Time", szName);
+			g_hCurrentMap.SetValue("Time", StringToInt(szName));
 			g_hResult.Push(g_hCurrentMap);
 
 			g_iConfigState = CS_TIME;

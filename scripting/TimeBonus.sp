@@ -23,7 +23,7 @@ public Plugin myinfo =
 }
 
 // global variable (from bool to Handle)
-stock int g_iAccountID[MAXPLAYERS+1], g_iBonuses[MAXPLAYERS+1], g_iTime[MAXPLAYERS+1], g_iNonFixedTime[MAXPLAYERS+1];
+stock int g_iAccountID[MAXPLAYERS+1], g_iBonuses[MAXPLAYERS+1], g_iTime[MAXPLAYERS+1], g_iNonFixedTime[MAXPLAYERS+1], g_iPrevTime[MAXPLAYERS+1];
 Database g_hDB;
 ArrayList g_hConfig;
 
@@ -107,15 +107,42 @@ public Action checkTime(Handle timer)
 {
     if(timer != INVALID_HANDLE)
     {
-        int playedTime;
+        //int playedTime;
+        StringMap hCurrent;
         for(int iClient = 0; iClient <= MaxClients; ++iClient)
         {
-            playedTime = UTIL_getPlayedTime(iClient); // получаем время, которое отыграл (!) игрок
+            //playedTime = UTIL_getPlayedTime(iClient); // получаем время, которое отыграл (!) игрок
             /**
             * TODO:
             * Дописать тут код с проверкой времени игрока (юзать вместо лесенки из циклов - подфункции)
             **/
+            findTime(iClient, UTIL_getPlayedTime(iClient), hCurrent);
         }
+    }
+}
+
+// дальше есть баг, за время, за одно и тоже время игрок будет получать бонусы
+void findTime(int iClient, int playedTime, StringMap hCurrent)
+{
+    int size = hCurrent.Size;
+    int time;
+    for(int i = 0; i < size; ++i)
+    {
+        hCurrent = g_hConfig.Get(i);
+        if(!hCurrent.GetValue("Time", time) 
+            || g_iPrevTime[iClient] < playedTime)    continue;
+        if(playedTime < time)   return;
+
+        /*if(hCurrent.GetValue("gifts", hCurrent)) 
+        {
+            SetFailState("[TimeBonus] Can't get value by key in findTime()");
+            return;
+        }*/
+
+        hCurrent = UTIL_getGift(iClient, hCurrent);
+
+        if(hCurrent != null)
+            giveBonus(iClient, hCurrent, time);
     }
 }
 

@@ -37,6 +37,24 @@ stock void UTIL_checkTime()
         resetTime();
 }
 
+// TODO: добавить эффекты открытия кейса
+stock StringMap UTIL_getGift(int iClient, StringMap hMap)
+{
+	float chance;
+	char value[20];
+	StringMap hCurrent;
+	for(int i = 0, size = hMap.Size; i < size; ++i)
+	{
+		hMap.GetValue("gifts", hCurrent);
+		hCurrent.GetString("chance", value, sizeof(value));
+		chance = float(StringToInt(value));
+		if(GetRandomFloat(0.0, 1.0) <= chance)
+			return hCurrent;
+	}
+
+	return null;
+}
+
 stock void UTIL_FormatTime(int iTime, char[] szBuffer, int iMaxLength) {
 	int days = iTime / (60 * 60 * 24);
 	int hours = (iTime - (days * (60 * 60 * 24))) / (60 * 60);

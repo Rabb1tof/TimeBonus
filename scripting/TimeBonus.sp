@@ -48,7 +48,7 @@ public void OnPluginStart()
     
     createConfig();
     createConvars();
-    Database.Connect(createDB, "timebonus");
+    //Database.Connect(createDB, "timebonus");
 
     char szPath[PLATFORM_MAX_PATH];
     BuildPath(Path_SM, szPath, sizeof(szPath), "configs/timebonus");
@@ -56,6 +56,8 @@ public void OnPluginStart()
         CreateDirectory(szPath, FPERM_O_WRITE | FPERM_O_READ | FPERM_O_EXEC);
 
     CreateTimer(1.0, checkTime, _, TIMER_REPEAT);
+
+    UTIL_Debug();
 }
 
 public void OnPluginEnd()
@@ -109,14 +111,15 @@ public Action checkTime(Handle timer)
     {
         //int playedTime;
         StringMap hCurrent;
-        for(int iClient = 0; iClient <= MaxClients; ++iClient)
+        for(int iClient = 1; iClient <= MaxClients; ++iClient)
         {
+            if(IsValidClient(iClient))
             //playedTime = UTIL_getPlayedTime(iClient); // получаем время, которое отыграл (!) игрок
             /**
             * TODO:
             * Дописать тут код с проверкой времени игрока (юзать вместо лесенки из циклов - подфункции)
             **/
-            findTime(iClient, UTIL_getPlayedTime(iClient), hCurrent);
+                findTime(iClient, UTIL_getPlayedTime(iClient), hCurrent);
         }
     }
 }
@@ -159,4 +162,63 @@ public void OnClientPutInServer(int iClient) {
 public void OnClientDisconnect(int iClient)
 {
     saveData(iClient);
+}
+
+void UTIL_Debug()
+{
+    // g_hConfig - ArrayList
+    StringMap hReadVal;
+    ArrayList hGifts;
+
+    int iCount = g_hConfig.Length;
+    char szName[64];
+    int iTime;
+    for (int iId; iId < iCount; ++iId)
+    {
+        hReadVal = g_hConfig.Get(iId);
+        hReadVal.GetValue("Time", iTime);
+        PrintToServer("TIME - %d", iTime);
+
+        hReadVal.GetValue("gifts", hGifts);
+        for(int i, iSize = hGifts.Length; i < iSize; ++i)
+        {
+            hReadVal = hGifts.Get(i);
+            hReadVal.GetString("Name", szName, sizeof(szName));
+            PrintToServer("GIFT -> %s", szName);
+        }
+    }
+}
+
+
+// Примерный алгоритм рандома:
+// 1. Выдернуть рандомные гифты, проверяя шанс. Всего нужно достать, условно, 4 шт.
+// 2. Запустить таймер крутилки, который будет повторяться каждый раз с увеличенным интервалом, пока не остановится.
+// 3. В момент остановки, достать итоговый выбранный гифт и выдать награду.
+void StartFindGift(int iClient, StringMap hMap)
+{
+    
+}
+
+StringMap FindGiftByChance(StringMap hStorage, float flChance)
+{
+    StringMap hGift;
+    ArrayList hList = new ArrayList();
+
+    StringMapSnapshot hShot = hGift.Shot();
+    int iShotCount = hShot.Length;
+    char szGiftName[64];
+    for (int iId; iId < iShotCount; ++iId)
+    {
+        hShot.GetKey(iId, szGiftName, sizeof(szGiftName));
+        hGift.
+    }
+    hGift = null;
+
+    if (hList.Length)
+    {
+        hGift = hList.Get(GetRandomInt(0, hList.Length-1));
+    }
+
+    hList.Close();
+    return hGift;
 }

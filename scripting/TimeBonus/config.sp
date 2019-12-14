@@ -1,6 +1,6 @@
 /**
- * Global variable.
- */
+* Global variable.
+*/
 ArrayList	g_hResult;
 StringMap	g_hCurrentMap;
 int			g_iConfigState;
@@ -49,8 +49,8 @@ ArrayList ParseConfig(const char[] szConfig)
 }
 
 /**
- * Callbacks.
- */
+* Callbacks.
+*/
 public SMCResult ConfigParser_OnEnterSection(SMCParser hSMC, const char[] szName, bool bOptQuotes)
 {
 	switch (g_iConfigState)
@@ -60,27 +60,26 @@ public SMCResult ConfigParser_OnEnterSection(SMCParser hSMC, const char[] szName
 		{
 			g_hCurrentMap = new StringMap();
 			g_hCurrentMap.SetValue("Time", StringToInt(szName));
+			g_hCurrentMap.SetValue("gifts", new ArrayList(4));
 			g_hResult.Push(g_hCurrentMap);
 
 			g_iConfigState = CS_TIME;
 		}
 
-        case CS_TIME:
-        {
-            StringMap hParent = g_hCurrentMap;
+		case CS_TIME:
+		{
+			StringMap hParent = g_hCurrentMap;
+			ArrayList hGifts;
 
-            g_hCurrentMap = new StringMap();
-            g_hCurrentMap.SetString("Name", szName); // тут отображаемео имя (приза)
-            g_hCurrentMap.SetValue("__parent", hParent);
-            if (!hParent.SetValue("gifts", g_hCurrentMap))
-            {
-                g_hCurrentMap.Close(); // die.
-                return SMCParse_HaltFail;
-            }
+			g_hCurrentMap = new StringMap();
+			g_hCurrentMap.SetString("Name", szName); // тут отображаемео имя (приза)
+			g_hCurrentMap.SetValue("__parent", hParent);
+			hParent.GetValue("gifts", hGifts);
+			hGifts.Push(g_hCurrentMap);
 
-            g_iConfigState = CS_GIFTS;
-            return SMCParse_Continue;
-        }
+			g_iConfigState = CS_GIFTS;
+			return SMCParse_Continue;
+		}
 
 		case CS_GIFTS:	
 		{

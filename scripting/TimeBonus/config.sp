@@ -1,7 +1,7 @@
 /**
 * Global variable.
 */
-//ArrayList	g_hConfig;
+ArrayList	g_hResult;
 StringMap	g_hCurrentMap;
 int			g_iConfigState;
 
@@ -25,7 +25,7 @@ void createConfig()
 ArrayList ParseConfig(const char[] szConfig)
 {
 	g_iConfigState = CS_UNDEFINED;
-	g_hConfig = new ArrayList(ByteCountToCells(4));
+	g_hResult = new ArrayList(ByteCountToCells(4));
 
 	SMCParser hSMC = new SMCParser();
 	hSMC.OnEnterSection	= ConfigParser_OnEnterSection;
@@ -45,7 +45,7 @@ ArrayList ParseConfig(const char[] szConfig)
 		return null;
 	}
 
-	return g_hConfig;
+	return g_hResult;
 }
 
 /**
@@ -61,7 +61,7 @@ public SMCResult ConfigParser_OnEnterSection(SMCParser hSMC, const char[] szName
 			g_hCurrentMap = new StringMap();
 			g_hCurrentMap.SetValue("Time", StringToInt(szName));
 			g_hCurrentMap.SetValue("gifts", new ArrayList(4));
-			g_hConfig.Push(g_hCurrentMap);
+			g_hResult.Push(g_hCurrentMap);
 
 			g_iConfigState = CS_TIME;
 		}
@@ -87,7 +87,7 @@ public SMCResult ConfigParser_OnEnterSection(SMCParser hSMC, const char[] szName
 			return SMCParse_HaltFail; // undefined behavior.
 		}
 	}
-	g_hConfig.Push(g_hCurrentMap);
+	g_hResult.Push(g_hCurrentMap);
 
 	return SMCParse_Continue;
 }

@@ -91,6 +91,7 @@ public void SQL_PreLoadDataCheck(Database hDB, DBResultSet hResult, const char[]
     }
 }
 
+/* TODO: дописать логику 2-х ниже функций. */
 public void SQL_uploadData(Database hDB, DBResultSet hResult, const char[] error, int iClient)
 {
     if(hResult == INVALID_HANDLE || error[0])
@@ -164,5 +165,20 @@ void giveBonus(int iClient, StringMap hCurrent, int time)
         }
 
         g_iPrevTime[iClient] = time;
+        g_iBonuses[iClient]++;
+        char query[128];
+        g_hDB.Format(query, sizeof(query), "UPDATE `tb_players` SET `time` = '%d', `prev_time` = '%d' WHERE `account_id` = '%d';");
+        g_hDB.Query(SQL_giveBonus, query);
     }
+}
+
+public void SQL_giveBonus(Database hDB, DBResultSet hResult, const char[] error, any data)
+{
+    if(hResult == INVALID_HANDLE || error[0])
+    {
+        LogError("Failed update data: %s", error);
+        return;
+    }
+
+    
 }

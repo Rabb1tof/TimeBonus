@@ -194,12 +194,12 @@ void UTIL_Debug()
 // 1. Выдернуть рандомные гифты, проверяя шанс. Всего нужно достать, условно, 4 шт.
 // 2. Запустить таймер крутилки, который будет повторяться каждый раз с увеличенным интервалом, пока не остановится.
 // 3. В момент остановки, достать итоговый выбранный гифт и выдать награду.
-void StartFindGift(int iClient, StringMap hMap)
+stock void StartFindGift(int iClient, StringMap hMap)
 {
     
 }
 
-StringMap FindGiftByChance(StringMap hStorage, float flChance)
+stock StringMap FindGiftByChance(StringMap hStorage, float flChance)
 {
     StringMap hGift;
     ArrayList hList = new ArrayList();

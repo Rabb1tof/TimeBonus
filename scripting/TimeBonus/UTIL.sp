@@ -67,6 +67,24 @@ stock void UTIL_FormatTime(int iTime, char[] szBuffer, int iMaxLength) {
 	len += Format(szBuffer[len], iMaxLength - len, "%s%d %t", szBuffer[0] ? " " : "", hours, "EBS_hours");
 }
 
+#define _FLOATCOMP_LOWER	-1
+#define _FLOATCOMP_EQUAL	0
+#define _FLOATCOMP_HIGHER	1
+stock int UTIL_CompareFloat(float flFirst, float flTwo, float flFault = 0.1)
+{
+	if (flFirst > (flTwo - flFault))
+	{
+		if (flFirst < (flTwo + flFault))
+		{
+			return _FLOATCOMP_EQUAL;
+		}
+
+		return _FLOATCOMP_HIGHER;
+	}
+
+	return _FLOATCOMP_LOWER;
+}
+
 // https://sm.alliedmods.net/new-api/sourcemod/FrameIterator
 /*stock void UTIL_PrintStackTrace();()
 {

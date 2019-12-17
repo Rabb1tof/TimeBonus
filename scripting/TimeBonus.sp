@@ -196,26 +196,44 @@ void UTIL_Debug()
 
 
 // Примерный алгоритм рандома:
-// 1. Выдернуть рандомные гифты, проверяя шанс. Всего нужно достать, условно, 4 шт.
+// 1. Выдернуть рандомные гифты, проверяя шанс. Всего нужно достать, условно, 5 шт.
 // 2. Запустить таймер крутилки, который будет повторяться каждый раз с увеличенным интервалом, пока не остановится.
 // 3. В момент остановки, достать итоговый выбранный гифт и выдать награду.
 stock void StartFindGift(int iClient, StringMap hMap)
 {
-    
+    ArrayList hGifts = new ArrayList(4);
+    ArrayList hFullGiftList;
+    StringMap hGift;
+
+    hMap.GetValue("gifts", hFullGiftList);
+    while (hGifts.Length < 5)
+    {
+        hGift = FindGiftByChance(hFullGiftList, GetRandomFloat(0.0, 1.0));
+
+        if (hGift)
+        {
+            hGifts.Push(hGift);
+        }
+    }
+
+    RunGiftTimer(iClient, hGifts, GetRandomInt(15, 30));
 }
 
-stock StringMap FindGiftByChance(StringMap hStorage, float flChance)
+stock StringMap FindGiftByChance(ArrayList hStorage, float flLuckyChance = -1.0)
 {
     StringMap hGift;
     ArrayList hList = new ArrayList();
 
-    StringMapSnapshot hShot = hGift.Shot();
-    int iShotCount = hShot.Length;
-    char szGiftName[64];
-    for (int iId; iId < iShotCount; ++iId)
+    int iGiftCount = hStorage.Length;
+    char szGiftChance[16];
+    for (int iId; iId < iGiftCount; ++iId)
     {
-        hShot.GetKey(iId, szGiftName, sizeof(szGiftName));
-        hGift.
+        hGift = hStorage.Get(iId);
+        hGift.GetString("chance", szGiftChance, sizeof(szGiftChance));
+        if (UTIL_CompareFloat(StringToFloat(szGiftChance), flLuckyChance, 0.01) == _FLOATCOMP_HIGHER)
+        {
+            hList.Push(hGift);
+        }
     }
     hGift = null;
 
@@ -226,4 +244,79 @@ stock StringMap FindGiftByChance(StringMap hStorage, float flChance)
 
     hList.Close();
     return hGift;
+}
+
+void RunGiftTimer(int iClient, ArrayList hGifts, int iSuccessChances)
+{
+    DataPack hPack;
+    float flTime = 0.2;
+    if (iSuccessChances < 0)
+    {
+        flTime *= float(iSuccessChances);
+    }
+
+    CreateDataTimer(flTime, GiftTimer, hPack);
+    hPack.WriteCell(GetClientUserId(iClient));
+    hPack.WriteCell(hGifts);
+    hPack.WriteCell(iSuccessChances);
+}
+
+/**
+ * Таймер.
+ * P.S.: @Rabb1tof, погнали в Дустан.
+ */
+public Action GiftTimer(Handle hTimer, DataPack hPack)
+{
+    hPack.Reset();
+    int iClient = GetClientOfUserId(hPack.ReadCell());
+    ArrayList hGifts = hPack.ReadCell();
+    int iSuccessChances = hPack.ReadCell();
+
+    // Check our client.
+    if (!iClient)
+    {
+        hGifts.Close();
+        return;
+    }
+
+    if (iSuccessChances == -10)
+    {
+        UTIL_RewardClient(iClient, hGifts.Get(2));
+        hGifts.Close();
+
+        return;
+    }
+
+    UTIL_DrawGiftRoulette(iClient, hGifts);
+    SortADTArrayCustom(hGifts, OnReorderGiftList);
+    RunGiftTimer(iClient, hGifts, iSuccessChances - 1);
+}
+
+public int OnReorderGiftList(int iIndexFirst, int iIndexTwo, Handle hArray, Handle hHndl /*not used*/)
+{
+    if (iIndexFirst == 0 && iIndexTwo == GetArraySize(hArray))
+    {
+        return 1;
+    }
+
+    return (iIndexFirst < iIndexTwo) ? 1 : -1;
+}
+
+void UTIL_DrawGiftRoulette(int iClient, ArrayList hGifts)
+{
+    char szGiftName[5][64];
+    for (int iGiftId; iGiftId < 5; ++iGiftId)
+    {
+        (view_as<StringMap>(hGifts.Get(iGiftId))).GetString("Name", szGiftName[iGiftId], sizeof(szGiftName[]));
+    }
+
+    PrintHintText(
+        iClient, "%s | %s | [%s] | %s | %s",
+        szGiftName[0], szGiftName[1], szGiftName[2], szGiftName[3], szGiftName[4]
+    );
+}
+
+void UTIL_RewardClient(int iClient, StringMap hGift)
+{
+    // TODO. Код выдачи подарка.
 }

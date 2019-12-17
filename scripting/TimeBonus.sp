@@ -166,6 +166,7 @@ void UTIL_Debug()
     int iCount = g_hConfig.Length;
     char szName[64];
     int iTime;
+    PrintToServer("%d || %d", iCount, g_hResult.Length);
     for (int iId; iId < iCount; ++iId)
     {
         hReadVal = g_hConfig.Get(iId);

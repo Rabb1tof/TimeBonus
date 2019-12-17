@@ -19,13 +19,14 @@ void createConfig()
 	if(!FileExists(szPath))
 		OpenFile(szPath, "w+");
 
-	g_hConfig = ParseConfig(szPath);
+	ParseConfig(szPath);
 }
 
-ArrayList ParseConfig(const char[] szConfig)
+void ParseConfig(const char[] szConfig)
 {
 	g_iConfigState = CS_UNDEFINED;
-	g_hResult = new ArrayList(ByteCountToCells(4));
+	g_hConfig = new ArrayList(4);
+	g_hResult = new ArrayList(4);
 
 	SMCParser hSMC = new SMCParser();
 	hSMC.OnEnterSection	= ConfigParser_OnEnterSection;
@@ -42,10 +43,7 @@ ArrayList ParseConfig(const char[] szConfig)
 		SMC_GetErrorString(eResult, szBuffer, sizeof(szBuffer));
 
 		LogError("Config parsing failure: %s (line %d, column %d)", szBuffer, iLine, iCol);
-		return null;
 	}
-
-	return g_hResult;
 }
 
 /**
@@ -58,13 +56,15 @@ public SMCResult ConfigParser_OnEnterSection(SMCParser hSMC, const char[] szName
 		case CS_UNDEFINED:				g_iConfigState = CS_ROOT;
 		case CS_ROOT:					
 		{
+			ArrayList hGifts = new ArrayList(4);
 			g_hCurrentMap = new StringMap();
 			g_hCurrentMap.SetValue("Time", StringToInt(szName));
-			g_hCurrentMap.SetValue("gifts", new ArrayList(4));
+			g_hCurrentMap.SetValue("gifts", hGifts);
+			g_hConfig.Push(g_hCurrentMap);
 			g_hResult.Push(g_hCurrentMap);
+			g_hResult.Push(hGifts);
 
 			g_iConfigState = CS_TIME;
-
 		}
 
 		case CS_TIME:

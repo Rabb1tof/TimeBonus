@@ -2,7 +2,6 @@ stock bool IsValidClient(int iClient) { return (iClient > 0 && iClient < MaxClie
 
 stock void UTIL_CleanMemory() 
 {
-	UTIL_CleanArrayList(g_hConfig);
 	UTIL_CleanArrayList(g_hResult);
 }
 
@@ -14,17 +13,10 @@ void UTIL_CleanArrayList(ArrayList &hArr)
 	}
 
 	int iLength = hArr.Length;
-	for (int i = iLength-1; i >= 0; i--) {
-		StringMap smArray;
-		ArrayList hList;
-		smArray = hArr.Get(i);
-		smArray.GetValue("gifts", hList);
-		for(int j = 0, length = hList.Length; j < length; ++j)
-		CloseHandle(hList.Get(j));
-		CloseHandle(hList);
-		CloseHandle(smArray);
-		hArr.Erase(i);
+	for (int i = iLength; --i != -1;) {
+		(view_as<Handle>(hArr.Get(i))).Close();
 	}
+	hArr.Clear();
 }
 
 stock int UTIL_getPlayedTime(int iClient)

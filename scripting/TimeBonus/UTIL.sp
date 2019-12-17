@@ -14,11 +14,9 @@ void UTIL_CleanArrayList(ArrayList &hArr)
 
 	int iLength = hArr.Length;
 	for (int i = iLength-1; i >= 0; i--) {
-		StringMap smArray[3];
+		StringMap smArray[2];
 		smArray[0] = hArr.Get(i);
-		smArray[0].GetValue("Requirements", smArray[1]);
-		smArray[0].GetValue("Gifts", smArray[2]);
-		CloseHandle(smArray[2]);
+		smArray[0].GetValue("Gifts", smArray[1]);
 		CloseHandle(smArray[1]);
 		CloseHandle(smArray[0]);
 		hArr.Erase(i);
@@ -67,6 +65,24 @@ stock void UTIL_FormatTime(int iTime, char[] szBuffer, int iMaxLength) {
 	len += Format(szBuffer[len], iMaxLength - len, "%s%d %t", szBuffer[0] ? " " : "", hours, "EBS_hours");
 }
 
+#define _FLOATCOMP_LOWER	-1
+#define _FLOATCOMP_EQUAL	0
+#define _FLOATCOMP_HIGHER	1
+stock int UTIL_CompareFloat(float flFirst, float flTwo, float flFault = 0.1)
+{
+	if (flFirst > (flTwo - flFault))
+	{
+		if (flFirst < (flTwo + flFault))
+		{
+			return _FLOATCOMP_EQUAL;
+		}
+
+		return _FLOATCOMP_HIGHER;
+	}
+
+	return _FLOATCOMP_LOWER;
+}
+
 // https://sm.alliedmods.net/new-api/sourcemod/FrameIterator
 /*stock void UTIL_PrintStackTrace();()
 {
@@ -88,4 +104,5 @@ stock void UTIL_FormatTime(int iTime, char[] szBuffer, int iMaxLength) {
 	} while (hIter.Next());
 
 	hIter.Close();
+>>>>>>> ae716b5cc3a3c5c773115f116a011f4d5bb925d5
 }*/

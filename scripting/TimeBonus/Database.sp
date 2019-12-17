@@ -25,7 +25,7 @@ public void createDB(Database hDB, const char[] szError, any data)
 
     g_hDB.SetCharset("utf8mb4");
 
-    g_hDB.Query(SQL_checkError, g_sCreateMainTable, 1, DBPrio_High); // 0
+    g_hDB.Query(SQL_checkError, g_sCreateMainTable, _, DBPrio_High); // 0
 
     for(int iClient = 1; iClient <= MaxClients; ++iClient)
         preLoadData(iClient);
@@ -33,16 +33,9 @@ public void createDB(Database hDB, const char[] szError, any data)
 
 public void SQL_checkError(Database hDB, DBResultSet hResult, const char[] error, any data)
 {
-    char table[23];
-    switch(data)
-    {
-        case 1: strcopy(table, sizeof(table), "createDB()");
-        case 2: strcopy(table, sizeof(table), "resetTime()");
-        case 3: strcopy(table, sizeof(table), "saveData()");
-    }
     if(!hResult || error[0])
     {
-        LogError("Failed on %s (%s)", table, error);
+        LogError("Failed found: (%s)", error);
         return;
     }
 }
@@ -77,7 +70,7 @@ public void SQL_PreLoadDataCheck(Database hDB, DBResultSet hResult, const char[]
         {
             g_iBonuses[iClient] = g_iTime[iClient] = g_iPrevTime[iClient] = 0;
             g_hDB.Format(szQuery, sizeof(szQuery), g_szSQL_UploadData, g_iAccountID[iClient], szEscapedName);
-            g_hDB.Query(SQL_uploadData, szQuery, GetClientUserId(iClient));
+            g_hDB.Query(SQL_checkError, szQuery);
         } else {
             if(hResult.FetchRow())      SetFailState("[TimeBonus] Failed FetchRow() at SQL_PreLoadDataCheck()");
 
@@ -86,55 +79,35 @@ public void SQL_PreLoadDataCheck(Database hDB, DBResultSet hResult, const char[]
             g_iPrevTime[iClient]    = hResult.FetchInt(3);
 
             g_hDB.Format(szQuery, sizeof(szQuery), g_szSQL_UpdateData, szEscapedName, g_iAccountID[iClient]);
-            g_hDB.Query(SQL_updateData, szQuery, GetClientUserId(iClient));
+            g_hDB.Query(SQL_checkError, szQuery);
         }
     }
 }
 
-/* TODO: дописать логику 2-х ниже функций. */
-public void SQL_uploadData(Database hDB, DBResultSet hResult, const char[] error, int iClient)
-{
-    if(hResult == INVALID_HANDLE || error[0])
-    {
-        LogError("Failed upload data: %s", error);
-        return;
-    }
-    iClient = GetClientOfUserId(iClient);
-
-}
-
-public void SQL_updateData(Database hDB, DBResultSet hResult, const char[] error, int iClient)
-{
-    if(hResult == INVALID_HANDLE || error[0])
-    {
-        LogError("Failed update data: %s", error);
-        return;
-    }
-    iClient = GetClientOfUserId(iClient);
-
-}
 
 void saveData(int iClient)
 {
     if(IsValidClient(iClient) && g_hDB)
     {
+        g_iTime[iClient] = UTIL_getPlayedTime(iClient);
         char szQuery[512];
         g_hDB.Format(szQuery, sizeof(szQuery), g_szSQL_SaveData, g_iBonuses[iClient], g_iTime[iClient], g_iPrevTime[iClient], g_iAccountID[iClient]);
-        g_hDB.Query(SQL_checkError, szQuery, 3);
+        g_hDB.Query(SQL_checkError, szQuery);
     }
 }
 
 void resetTime()
 {
-    g_hDB.Query(SQL_checkError, "UPDATE `tb_players` SET `time` = '0', `prev_time` = '0' WHERE `time` <> '0';", 2, DBPrio_High);
+    g_hDB.Query(SQL_checkError, "UPDATE `tb_players` SET `time` = '0', `prev_time` = '0' WHERE `time` <> '0';", _, DBPrio_High);
 }
 
-void giveBonus(int iClient, StringMap hCurrent, int time)
+void giveBonus(int iClient, StringMap hCurrent)
 {
     if(IsValidClient(iClient))
     {
         int credits, itemID;
         char value[20];
+        DataPack hPack = new DataPack();
 
         hCurrent.GetString("credits", value, sizeof(value));
         credits = StringToInt(value);
@@ -151,7 +124,7 @@ void giveBonus(int iClient, StringMap hCurrent, int time)
         if(itemID > 0)
             Shop_GiveClientItem(iClient, view_as<ItemId>(itemID));
 
-        if(StrEqual(value, ""))
+        if(!StrEqual(value, ""))
         {
             if(!VIP_IsClientVIP(iClient))
                 VIP_GiveClientVIP(_, iClient, g_iTimeVIP, value);
@@ -163,22 +136,44 @@ void giveBonus(int iClient, StringMap hCurrent, int time)
                 
             }
         }
+        hPack.WriteCell(GetClientUserId(iClient));
+        hPack.WriteCell(credits);
+        hPack.WriteCell(itemID);
+        hPack.WriteString(value);
 
-        g_iPrevTime[iClient] = time;
         g_iBonuses[iClient]++;
         char query[128];
-        g_hDB.Format(query, sizeof(query), "UPDATE `tb_players` SET `time` = '%d', `prev_time` = '%d' WHERE `account_id` = '%d';");
-        g_hDB.Query(SQL_giveBonus, query);
+        g_hDB.Format(query, sizeof(query), "UPDATE `tb_players` SET `bonuses` = '%d', `prev_time` = '%d' WHERE `account_id` = '%d';",
+            g_iBonuses[iClient], g_iPrevTime[iClient], g_iAccountID[iClient]);
+
+        g_hDB.Query(SQL_giveBonus, query, hPack);
     }
 }
 
-public void SQL_giveBonus(Database hDB, DBResultSet hResult, const char[] error, any data)
+public void SQL_giveBonus(Database hDB, DBResultSet hResult, const char[] error, DataPack hPack)
 {
     if(hResult == INVALID_HANDLE || error[0])
     {
-        LogError("Failed update data: %s", error);
+        LogError("Failed give bonus: %s", error);
         return;
     }
 
+    char buffer[45];
+    hPack.Reset();
+    int iClient = GetClientOfUserId(hPack.ReadCell());
+    int credits = hPack.ReadCell();
+    int itemID  = hPack.ReadCell();
+    char group[20];
+    hPack.ReadString(group, sizeof(group));
+    hPack.Close();
+
+    CGOPrintToChatAll("%s {green}%N {default} получил бонусы:", PREFIX, iClient);
+    if(credits > 0)
+        CGOPrintToChatAll("%s {olive}%d {default}кредитов", PREFIX, credits);
+
+    if(itemID > 0 && Shop_GetItemById(view_as<ItemId>(itemID), buffer, sizeof(buffer)))
+        CGOPrintToChatAll("%s получил предмет: {olive}%s", PREFIX, buffer);
     
+    if(!StrEqual(group, ""))
+        CGOPrintToChatAll("%s получил вип-группу: {olive}%s {default} на {green}%d {default}минут", PREFIX, group, g_iTimeVIP/60);
 }

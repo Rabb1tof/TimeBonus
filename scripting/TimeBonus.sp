@@ -6,12 +6,13 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define VERS_PLUGIN "1.0"
+#define VERS_PLUGIN "0.2.1b"
 
 #pragma newdecls required
 #pragma semicolon 1
 
 #define TIME_MENU 10 // time of menu (all) //
+#define PREFIX "{blue}[{purple}Time Bonus{blue}]{default}"
 
 public Plugin myinfo =
 {
@@ -115,6 +116,7 @@ public Action checkTime(Handle timer)
         {
             if(IsValidClient(iClient))
             //playedTime = UTIL_getPlayedTime(iClient); // получаем время, которое отыграл (!) игрок
+            
             /**
             * TODO:
             * Дописать тут код с проверкой времени игрока (юзать вместо лесенки из циклов - подфункции)
@@ -145,7 +147,10 @@ void findTime(int iClient, int playedTime, StringMap hCurrent)
         hCurrent = UTIL_getGift(iClient, hCurrent);
 
         if(hCurrent != null)
-            giveBonus(iClient, hCurrent, time);
+        {
+            g_iPrevTime[iClient] = time;
+            giveBonus(iClient, hCurrent);
+        }
     }
 }
 

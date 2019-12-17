@@ -132,9 +132,9 @@ public Action checkTime(Handle timer)
                         ShowSyncHudText(iClient, g_hSync, "До следующего бонуса: %s\nСледующий бонус: %s", sTime, name);
                     }
                 }
-                if(playedTime/60 >= currentPosTime) // рофл в том, что выполняется
+                if(playedTime >= currentPosTime*60) // рофл в том, что выполняется
                 {
-                    g_iPrevTime[iClient] = time;
+                    g_iPrevTime[iClient] = currentPosTime;
                     StartFindGift(iClient, hCurrent); 
                 }
             }

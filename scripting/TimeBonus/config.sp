@@ -85,7 +85,6 @@ public SMCResult ConfigParser_OnEnterSection(SMCParser hSMC, const char[] szName
 
 		case CS_GIFTS:	return SMCParse_HaltFail; // undefined behavior.
 	}
-
 	return SMCParse_Continue;
 }
 

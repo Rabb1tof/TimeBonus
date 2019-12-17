@@ -72,11 +72,11 @@ public void SQL_PreLoadDataCheck(Database hDB, DBResultSet hResult, const char[]
             g_hDB.Format(szQuery, sizeof(szQuery), g_szSQL_UploadData, g_iAccountID[iClient], szEscapedName);
             g_hDB.Query(SQL_checkError, szQuery);
         } else {
-            if(hResult.FetchRow())      SetFailState("[TimeBonus] Failed FetchRow() at SQL_PreLoadDataCheck()");
+            if(!hResult.FetchRow())      SetFailState("[TimeBonus] Failed FetchRow() at SQL_PreLoadDataCheck()");
 
-            g_iBonuses[iClient]     = hResult.FetchInt(1);
-            g_iTime[iClient]        = hResult.FetchInt(2);
-            g_iPrevTime[iClient]    = hResult.FetchInt(3);
+            g_iBonuses[iClient]     = hResult.FetchInt(0);
+            g_iTime[iClient]        = hResult.FetchInt(1);
+            g_iPrevTime[iClient]    = hResult.FetchInt(2);
 
             g_hDB.Format(szQuery, sizeof(szQuery), g_szSQL_UpdateData, szEscapedName, g_iAccountID[iClient]);
             g_hDB.Query(SQL_checkError, szQuery);

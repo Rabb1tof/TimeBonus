@@ -64,6 +64,7 @@ public SMCResult ConfigParser_OnEnterSection(SMCParser hSMC, const char[] szName
 			g_hResult.Push(g_hCurrentMap);
 
 			g_iConfigState = CS_TIME;
+
 		}
 
 		case CS_TIME:
@@ -72,22 +73,18 @@ public SMCResult ConfigParser_OnEnterSection(SMCParser hSMC, const char[] szName
 			ArrayList hGifts;
 
 			g_hCurrentMap = new StringMap();
-			g_hCurrentMap.SetString("Name", szName); // тут отображаемео имя (приза)
+			g_hCurrentMap.SetString("Name", szName); // тут отображаемого имя (приза)
 			g_hCurrentMap.SetValue("__parent", hParent);
 			hParent.GetValue("gifts", hGifts);
 			hGifts.Push(g_hCurrentMap);
 
 			g_iConfigState = CS_GIFTS;
+			g_hResult.Push(g_hCurrentMap);
 			return SMCParse_Continue;
 		}
 
-		case CS_GIFTS:	
-		{
-
-			return SMCParse_HaltFail; // undefined behavior.
-		}
+		case CS_GIFTS:	return SMCParse_HaltFail; // undefined behavior.
 	}
-	g_hResult.Push(g_hCurrentMap);
 
 	return SMCParse_Continue;
 }

@@ -27,6 +27,7 @@ public Plugin myinfo =
 stock int g_iAccountID[MAXPLAYERS+1], g_iBonuses[MAXPLAYERS+1], g_iTime[MAXPLAYERS+1], g_iNonFixedTime[MAXPLAYERS+1], g_iPrevTime[MAXPLAYERS+1];
 Database g_hDB;
 ArrayList g_hConfig;
+Handle    g_hSync;
 
 #include "TimeBonus/convar.sp"
 //#include "TimeBonus/API.sp"
@@ -47,9 +48,10 @@ public void OnPluginStart()
 
     HookEvent("player_team", OnPlayerChangeTeam);
     
+    g_hSync = CreateHudSynchronizer();
     createConfig();
     createConvars();
-    //Database.Connect(createDB, "timebonus");
+    Database.Connect(createDB, "timebonus");
 
     char szPath[PLATFORM_MAX_PATH];
     BuildPath(Path_SM, szPath, sizeof(szPath), "configs/timebonus");
@@ -110,42 +112,33 @@ public Action checkTime(Handle timer)
 {
     if(timer != INVALID_HANDLE)
     {
-        //int playedTime;
+        int playedTime, currentPosTime;
+        char name[64], sTime[64];
         StringMap hCurrent;
+        SetHudTextParams(0.75, 0.9, 1.0, 255, 255, 255, 255, 0, 0.0, 0.0, 0.0);
         for(int iClient = 1; iClient <= MaxClients; ++iClient)
         {
             if(IsValidClient(iClient))
-            //playedTime = UTIL_getPlayedTime(iClient); // получаем время, которое отыграл (!) игрок
-            
-            /**
-            * TODO:
-            * Дописать тут код с проверкой времени игрока (юзать вместо лесенки из циклов - подфункции)
-            **/
-                findTime(iClient, UTIL_getPlayedTime(iClient), hCurrent);
+            {
+                playedTime = UTIL_getPlayedTime(iClient);
+                for(int i = 0, length = g_hConfig.Length; i < length; ++i)
+                {
+                    hCurrent = g_hConfig.Get(i);
+                    if(hCurrent.GetValue("Time", currentPosTime) 
+                        && playedTime/60 < currentPosTime
+                        && hCurrent.GetString("name", name, sizeof(name)))
+                    {
+                        UTIL_FormatTime(currentPosTime*60 - playedTime, sTime, sizeof(sTime));
+                        ShowSyncHudText(iClient, g_hSync, "До следующего бонуса: %s\nСледующий бонус: %s", sTime, name);
+                    }
+                }
+                if(playedTime/60 >= currentPosTime) // рофл в том, что выполняется
+                {
+                    g_iPrevTime[iClient] = time;
+                    StartFindGift(iClient, hCurrent); 
+                }
+            }
         }
-    }
-}
-
-// дальше есть баг, за время, за одно и тоже время игрок будет получать бонусы
-void findTime(int iClient, int playedTime, StringMap hCurrent)
-{
-    int size = hCurrent.Size;
-    int time;
-    for(int i = 0; i < size; ++i)
-    {
-        hCurrent = g_hConfig.Get(i);
-        if(!hCurrent.GetValue("Time", time) 
-            || g_iPrevTime[iClient] < playedTime)    continue;
-        if(playedTime < time)   return;
-
-        /*if(hCurrent.GetValue("gifts", hCurrent)) 
-        {
-            SetFailState("[TimeBonus] Can't get value by key in findTime()");
-            return;
-        }*/
-
-        g_iPrevTime[iClient] = time;
-        StartFindGift(iClient, hCurrent);
     }
 }
 

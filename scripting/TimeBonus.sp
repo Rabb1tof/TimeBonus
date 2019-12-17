@@ -144,13 +144,8 @@ void findTime(int iClient, int playedTime, StringMap hCurrent)
             return;
         }*/
 
-        hCurrent = UTIL_getGift(iClient, hCurrent);
-
-        if(hCurrent != null)
-        {
-            g_iPrevTime[iClient] = time;
-            giveBonus(iClient, hCurrent);
-        }
+        g_iPrevTime[iClient] = time;
+        StartFindGift(iClient, hCurrent);
     }
 }
 
@@ -262,9 +257,8 @@ void RunGiftTimer(int iClient, ArrayList hGifts, int iSuccessChances)
 }
 
 /**
- * Таймер.
- * P.S.: @Rabb1tof, погнали в Дустан.
- */
+* Таймер.
+**/
 public Action GiftTimer(Handle hTimer, DataPack hPack)
 {
     hPack.Reset();
@@ -281,7 +275,7 @@ public Action GiftTimer(Handle hTimer, DataPack hPack)
 
     if (iSuccessChances == -10)
     {
-        UTIL_RewardClient(iClient, hGifts.Get(2));
+        giveBonus(iClient, hGifts.Get(2));
         hGifts.Close();
 
         return;
@@ -300,24 +294,4 @@ public int OnReorderGiftList(int iIndexFirst, int iIndexTwo, Handle hArray, Hand
     }
 
     return (iIndexFirst < iIndexTwo) ? 1 : -1;
-}
-
-void UTIL_DrawGiftRoulette(int iClient, ArrayList hGifts)
-{
-    char szGiftName[5][64];
-    for (int iGiftId; iGiftId < 5; ++iGiftId)
-    {
-        (view_as<StringMap>(hGifts.Get(iGiftId))).GetString("Name", szGiftName[iGiftId], sizeof(szGiftName[]));
-    }
-
-    PrintHintText(
-        iClient, "%s | %s | [%s] | %s | %s",
-        szGiftName[0], szGiftName[1], szGiftName[2], szGiftName[3], szGiftName[4]
-    );
-}
-
-void UTIL_RewardClient(int iClient, StringMap hGift)
-{
-    // TODO. Код выдачи подарка.
->>>>>>> ae716b5cc3a3c5c773115f116a011f4d5bb925d5
 }

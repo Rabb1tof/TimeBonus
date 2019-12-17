@@ -14,55 +14,28 @@ void UTIL_CleanArrayList(ArrayList &hArr)
 
 	int iLength = hArr.Length;
 	for (int i = iLength-1; i >= 0; i--) {
-		StringMap smArray[2];
-		smArray[0] = hArr.Get(i);
-		smArray[0].GetValue("Gifts", smArray[1]);
-		CloseHandle(smArray[1]);
-		CloseHandle(smArray[0]);
+		StringMap smArray;
+		ArrayList hList;
+		smArray = hArr.Get(i);
+		smArray.GetValue("gifts", hList);
+		for(int j = 0, length = hList.Length; j < length; ++j)
+		CloseHandle(hList.Get(j));
+		CloseHandle(hList);
+		CloseHandle(smArray);
 		hArr.Erase(i);
 	}
 }
 
 stock int UTIL_getPlayedTime(int iClient)
 {
-    return (g_iTime[iClient] + RoundToCeil(GetClientTime(iClient)) - g_iNonFixedTime[iClient]);
+	return (g_iTime[iClient] + RoundToCeil(GetClientTime(iClient)) - g_iNonFixedTime[iClient]);
 }
 
 stock void UTIL_checkTime()
 {
-    int iTime = GetTime();
-    if(iTime / (60 * 60 * 24) == 0)
-        resetTime();
-}
-
-// TODO: добавить эффекты открытия кейса
-stock StringMap UTIL_getGift(int iClient, StringMap hMap)
-{
-	float chance;
-	char value[20];
-	StringMap hCurrent;
-	for(int i = 0, size = hMap.Size; i < size; ++i)
-	{
-		hMap.GetValue("gifts", hCurrent);
-		hCurrent.GetString("chance", value, sizeof(value));
-		chance = float(StringToInt(value));
-		if(GetRandomFloat(0.0, 1.0) <= chance)
-			return hCurrent;
-	}
-
-	return null;
-}
-
-stock void UTIL_FormatTime(int iTime, char[] szBuffer, int iMaxLength) {
-	int days = iTime / (60 * 60 * 24);
-	int hours = (iTime - (days * (60 * 60 * 24))) / (60 * 60);
-	int len;
-
-	if (days) {
-		len += Format(szBuffer[len], iMaxLength - len, "%d %s", days, "days");
-	}
-
-	len += Format(szBuffer[len], iMaxLength - len, "%s%d %t", szBuffer[0] ? " " : "", hours, "EBS_hours");
+	int iTime = GetTime();
+	if(iTime / (60 * 60 * 24) == 0)
+		resetTime();
 }
 
 #define _FLOATCOMP_LOWER	-1
@@ -81,6 +54,20 @@ stock int UTIL_CompareFloat(float flFirst, float flTwo, float flFault = 0.1)
 	}
 
 	return _FLOATCOMP_LOWER;
+}
+
+void UTIL_DrawGiftRoulette(int iClient, ArrayList hGifts)
+{
+	char szGiftName[5][64];
+	for (int iGiftId; iGiftId < 5; ++iGiftId)
+	{
+		(view_as<StringMap>(hGifts.Get(iGiftId))).GetString("Name", szGiftName[iGiftId], sizeof(szGiftName[]));
+	}
+
+	PrintHintText(
+		iClient, "%s | %s | [%s] | %s | %s",
+		szGiftName[0], szGiftName[1], szGiftName[2], szGiftName[3], szGiftName[4]
+	);
 }
 
 // https://sm.alliedmods.net/new-api/sourcemod/FrameIterator

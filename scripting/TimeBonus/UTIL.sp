@@ -57,10 +57,33 @@ void UTIL_DrawGiftRoulette(int iClient, ArrayList hGifts)
 		(view_as<StringMap>(hGifts.Get(iGiftId))).GetString("Name", szGiftName[iGiftId], sizeof(szGiftName[]));
 	}
 
-	PrintToChat(
+	PrintHintText(
 		iClient, "%s | %s | [%s] | %s | %s",
 		szGiftName[0], szGiftName[1], szGiftName[2], szGiftName[3], szGiftName[4]
 	);
+}
+
+stock int UTIL_getTimeByConfigIndex(const int index)
+{
+	int time = -1;
+	if(index < g_hConfig.Length && index > -1)
+		view_as<StringMap>(g_hConfig.Get(index)).GetValue("Time", time);
+	
+	return time;
+}
+
+stock int UTIL_getIndexByConfigTime(const int time)
+{
+	int configTime;
+
+	for(int i = 0, length = g_hConfig.Length; i < length; ++i)
+	{
+		view_as<StringMap>(g_hConfig.Get(i)).GetValue("Time", configTime);
+		if(time == configTime)
+			return i;
+	}
+
+	return -2;
 }
 
 /* Func by Kruzya, thx =) */
@@ -82,6 +105,9 @@ void UTIL_FormatTime(int iTime, char[] szBuffer, int iMaxLength) {
     len += Format(szBuffer[len], iMaxLength - len, "%s%d %s", (hours || minutes) ? " " : "", seconds, "секунд(ы)");
   }
 }
+
+/* Too thx Kruzya for this func =) */
+stock int UTIL_Max(int a, int b) { return a > b ? a : b; }
 
 // https://sm.alliedmods.net/new-api/sourcemod/FrameIterator
 /*stock void UTIL_PrintStackTrace();()

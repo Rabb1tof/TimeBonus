@@ -24,7 +24,8 @@ public Plugin myinfo =
 }
 
 // global variable (from bool to Handle)
-stock int g_iAccountID[MAXPLAYERS+1], g_iBonuses[MAXPLAYERS+1], g_iTime[MAXPLAYERS+1], g_iNonFixedTime[MAXPLAYERS+1], g_iPrevTime[MAXPLAYERS+1];
+bool g_bIsTimerRunning[MAXPLAYERS+1] = {false, ...};
+int g_iAccountID[MAXPLAYERS+1], g_iBonuses[MAXPLAYERS+1], g_iTime[MAXPLAYERS+1], g_iNonFixedTime[MAXPLAYERS+1], g_iNextTime[MAXPLAYERS+1], g_iPrevTime[MAXPLAYERS+1] = -1;
 Database g_hDB;
 ArrayList g_hConfig;
 Handle    g_hSync;
@@ -110,33 +111,33 @@ public Action nonFixedTime(Handle timer, int iClient)
 
 public Action checkTime(Handle timer)
 {
-    if(timer != INVALID_HANDLE)
+    int playedTime, currentPosTime;
+    char name[64], sTime[64];
+    StringMap hCurrent;
+    SetHudTextParams(0.75, 0.9, 1.5, 255, 255, 255, 255, 0, 0.0, 0.0, 0.0);
+    for(int iClient = 1; iClient <= MaxClients; ++iClient)
     {
-        int playedTime, currentPosTime;
-        char name[64], sTime[64];
-        StringMap hCurrent;
-        SetHudTextParams(0.75, 0.9, 1.0, 255, 255, 255, 255, 0, 0.0, 0.0, 0.0);
-        for(int iClient = 1; iClient <= MaxClients; ++iClient)
+        if(IsValidClient(iClient) && !g_bIsTimerRunning[iClient])
         {
-            if(IsValidClient(iClient))
+            playedTime = UTIL_getPlayedTime(iClient);
+            hCurrent = g_hConfig.Get(UTIL_Max(g_iPrevTime[iClient], 0));
+            if(hCurrent.GetValue("Time", currentPosTime) 
+                && playedTime/60 <= currentPosTime
+                && hCurrent.GetString("name", name, sizeof(name)))
+                //&& playedTime/60 <= UTIL_getTimeByConfigIndex(g_iNextTime[iClient])
             {
-                playedTime = UTIL_getPlayedTime(iClient);
-                for(int i = 0, length = g_hConfig.Length; i < length; ++i)
-                {
-                    hCurrent = g_hConfig.Get(i);
-                    if(hCurrent.GetValue("Time", currentPosTime) 
-                        && playedTime/60 < currentPosTime
-                        && hCurrent.GetString("name", name, sizeof(name)))
-                    {
-                        UTIL_FormatTime(currentPosTime*60 - playedTime, sTime, sizeof(sTime));
-                        ShowSyncHudText(iClient, g_hSync, "До следующего бонуса: %s\nСледующий бонус: %s", sTime, name);
-                    }
-                }
-                if(playedTime >= currentPosTime*60) // рофл в том, что выполняется
-                {
-                    g_iPrevTime[iClient] = currentPosTime;
-                    StartFindGift(iClient, hCurrent); 
-                }
+                if(UTIL_getTimeByConfigIndex(g_iPrevTime[iClient]) == UTIL_getTimeByConfigIndex(g_iNextTime[iClient]))
+                    LogError("checkTime()::Failed get time by index (previus and next time pos was equal).");
+
+                g_iNextTime[iClient] = UTIL_getIndexByConfigTime(currentPosTime);
+                UTIL_FormatTime(currentPosTime*60 - playedTime, sTime, sizeof(sTime));
+                ShowSyncHudText(iClient, g_hSync, "До следующего бонуса: %s\nСледующий бонус: %s", sTime, name);
+            }
+            
+            if(playedTime >= currentPosTime*60)
+            {
+                g_iPrevTime[iClient] = UTIL_getIndexByConfigTime(currentPosTime);
+                StartFindGift(iClient, hCurrent); 
             }
         }
     }
@@ -241,7 +242,7 @@ void RunGiftTimer(int iClient, ArrayList hGifts, int iSuccessChances)
     float flTime = 0.2;
     if (iSuccessChances < 0)
     {
-        flTime *= float(iSuccessChances);
+        flTime *= float(-iSuccessChances);
     }
 
     CreateDataTimer(flTime, GiftTimer, hPack);
@@ -260,6 +261,8 @@ public Action GiftTimer(Handle hTimer, DataPack hPack)
     ArrayList hGifts = hPack.ReadCell();
     int iSuccessChances = hPack.ReadCell();
 
+    g_bIsTimerRunning[iClient] = true;
+
     // Check our client.
     if (!iClient)
     {
@@ -269,6 +272,7 @@ public Action GiftTimer(Handle hTimer, DataPack hPack)
 
     if (iSuccessChances == -10)
     {
+        g_bIsTimerRunning[iClient] = false;
         giveBonus(iClient, hGifts.Get(2));
         hGifts.Close();
 

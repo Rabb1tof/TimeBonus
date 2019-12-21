@@ -25,7 +25,7 @@ public Plugin myinfo =
 
 // global variable (from bool to Handle)
 bool    g_bIsTimerRunning[MAXPLAYERS+1] = {false, ...},
-        g_bDisplayHud[MAXPLAYERS+1] = {false, ...};
+        g_bDisplayHud[MAXPLAYERS+1] = {true, ...};
 int g_iAccountID[MAXPLAYERS+1], g_iBonuses[MAXPLAYERS+1], g_iTime[MAXPLAYERS+1], g_iNonFixedTime[MAXPLAYERS+1], g_iNextTime[MAXPLAYERS+1], g_iPrevTime[MAXPLAYERS+1] = -1;
 Database g_hDB;
 ArrayList g_hConfig;
@@ -120,7 +120,8 @@ public Action checkTime(Handle timer)
     {
         if(IsValidClient(iClient) && !g_bIsTimerRunning[iClient])
         {
-            SetHudTextParams(0.75, 0.9, 1.5, 255, 255, 255, 255, 0, 0.0, 0.0, 0.0);
+            if(g_bDisplayHud[iClient])
+                SetHudTextParams(0.75, 0.9, 1.5, 255, 255, 255, 255, 0, 0.0, 0.0, 0.0);
 
             if(UTIL_checkValidIndex(g_iNextTime[iClient]))
             {
@@ -131,16 +132,19 @@ public Action checkTime(Handle timer)
                     && hCurrent.GetString("name", name, sizeof(name))
                     && playedTime/60 <= UTIL_getTimeByConfigIndex(g_iNextTime[iClient]))
                 {
-                    if(UTIL_getTimeByConfigIndex(g_iPrevTime[iClient]) == UTIL_getTimeByConfigIndex(g_iNextTime[iClient]))
+                    if(g_bDisplayHud[iClient])
                     {
-                        LogError("checkTime()::Failed get time by index (previus and next time pos was equal):: Previus: %d | Next: %d.", 
-                            g_iPrevTime[iClient], g_iNextTime[iClient]);
-                        return Plugin_Handled;
-                    }
+                        if(UTIL_getTimeByConfigIndex(g_iPrevTime[iClient]) == UTIL_getTimeByConfigIndex(g_iNextTime[iClient]))
+                        {
+                            LogError("checkTime()::Failed get time by index (previus and next time pos was equal):: Previus: %d | Next: %d.", 
+                                g_iPrevTime[iClient], g_iNextTime[iClient]);
+                            return Plugin_Handled;
+                        }
 
-                    //g_iNextTime[iClient] = UTIL_getIndexByConfigTime(currentPosTime);
-                    UTIL_FormatTime(currentPosTime*60 - playedTime, sTime, sizeof(sTime));
-                    ShowSyncHudText(iClient, g_hSync, "До следующего бонуса: %s\nСледующий бонус: %s", sTime, name);
+                        //g_iNextTime[iClient] = UTIL_getIndexByConfigTime(currentPosTime);
+                        UTIL_FormatTime(currentPosTime*60 - playedTime, sTime, sizeof(sTime));
+                        ShowSyncHudText(iClient, g_hSync, "До следующего бонуса: %s\nСледующий бонус: %s", sTime, name);
+                    }
                 }
                 
                 if(playedTime >= currentPosTime*60)

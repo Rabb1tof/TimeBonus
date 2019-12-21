@@ -120,6 +120,40 @@ void UTIL_FormatTime(int iTime, char[] szBuffer, int iMaxLength) {
 /* Too thx Kruzya for this func =) */
 stock int UTIL_Max(int a, int b) { return a > b ? a : b; }
 
+stock bool UTIL_checkBlackListTime(int iClient, int time, char[] output, int maxLength)
+{
+	if(g_hBlackListBonus[iClient] == INVALID_HANDLE)	return false;
+	int lengthBlackList = g_hBlackListBonus[iClient].Length;
+	int blackListTime;
+	char blackList[20];
+	for(int i = 0; i < lengthBlackList; ++i)
+	{
+		g_hBlackListBonus[iClient].GetString(i, blackList, sizeof(blackList));
+		StringToInt(blackList, blackListTime);
+		if(time == blackListTime)
+		{
+			FormatEx(output, maxLength, "%s", output, " [X]");
+			return true;
+		}
+	}
+	return false;
+}
+
+/* Check complete current time position or not */
+stock bool UTIL_checkExecutionTime(int time)
+{
+	int length = g_hConfig.Length;
+	int timeValue;
+	for(int i = 0; i < length; ++i)
+	{
+		view_as<StringMap>(g_hConfig.Get(i)).GetValue("Time", timeValue);
+		if(time == timeValue)
+			return true;
+	}
+
+	return false;
+}
+
 // https://sm.alliedmods.net/new-api/sourcemod/FrameIterator
 /*stock void UTIL_PrintStackTrace();()
 {

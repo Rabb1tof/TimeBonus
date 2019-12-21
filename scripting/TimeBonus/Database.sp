@@ -71,7 +71,9 @@ public void SQL_PreLoadDataCheck(Database hDB, DBResultSet hResult, const char[]
         {
             g_iBonuses[iClient] = g_iTime[iClient] = 0;
             g_iPrevTime[iClient] = -1;
-            view_as<StringMap>(g_hConfig.Get(0)).GetValue("Time", g_iNextTime[iClient]);
+            int time;
+            view_as<StringMap>(g_hConfig.Get(0)).GetValue("Time", time);
+            g_iNextTime[iClient] = UTIL_getIndexByConfigTime(time);
             g_hDB.Format(szQuery, sizeof(szQuery), g_szSQL_UploadData, g_iAccountID[iClient], szEscapedName);
             g_hDB.Query(SQL_checkError, szQuery);
         } else {
@@ -179,4 +181,5 @@ public void SQL_giveBonus(Database hDB, DBResultSet hResult, const char[] error,
         CGOPrintToChatAll("%s получил вип-группу: {olive}%s {default} на {green}%d {default}минут", PREFIX, value, g_iTimeVIP/60);
 
     g_iNextTime[iClient]++;
+    UTIL_clearBlackList(iClient);
 }

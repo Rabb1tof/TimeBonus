@@ -86,6 +86,17 @@ stock int UTIL_getIndexByConfigTime(const int time)
 	return -2;
 }
 
+stock bool UTIL_checkValidIndex(const int index)
+{
+	return (g_hConfig.Length > index) ? true : false;
+}
+
+stock void UTIL_clearBlackList(int iClient)
+{
+	if(iClient)
+		return;
+}
+
 /* Func by Kruzya, thx =) */
 void UTIL_FormatTime(int iTime, char[] szBuffer, int iMaxLength) {
   int days = iTime / (60 * 60 * 24);

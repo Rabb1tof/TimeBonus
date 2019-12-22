@@ -45,7 +45,7 @@ void showDisableBonus(int iClient)
         IntToString(time, value, sizeof(value));
         Format(buffer, sizeof(buffer), "%d минут", time);
         UTIL_checkBlackListTime(iClient, time, buffer, sizeof(buffer));
-        menu.AddItem(value, buffer, UTIL_checkExecutionTime(time) ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+        menu.AddItem(value, buffer, UTIL_checkExecutionTime(UTIL_getIndexByConfigTime(time), iClient) ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
         /* TODO: добавить проверку не заблокирован ли уже бонус и отображение [x] - заблочен, [ ] - не заблочен. Не кликабельный текст - уже получен. */
     }
 
@@ -62,7 +62,18 @@ public int disableBonusHandler(Menu menu, MenuAction action, int iClient, int it
         {
             char info[20];
             menu.GetItem(item, info, sizeof(info));
-            g_hBlackListBonus[iClient].PushString(info);
+            int index = UTIL_getIndexByConfigTime(StringToInt(info));
+            if(UTIL_isBannedIndex(iClient, index))
+            {
+                int value = g_hBlackListBonus[iClient].FindValue(index);
+                if(value != -1)
+                {
+                    g_hBlackListBonus[iClient].Erase(value);
+                    g_iNextTime[iClient] = index;
+                }
+            } else {
+                g_hBlackListBonus[iClient].Push(index);
+            }
 
             showDisableBonus(iClient);
         }

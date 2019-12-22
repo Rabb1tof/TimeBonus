@@ -6,7 +6,7 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define VERS_PLUGIN "0.3b"
+#define VERS_PLUGIN "1.0.7"
 
 #pragma newdecls required
 #pragma semicolon 1
@@ -33,7 +33,6 @@ ArrayList g_hBlackListBonus[MAXPLAYERS+1]; /* User can disable some specific bon
 Handle    g_hSync;
 
 #include "TimeBonus/convar.sp"
-//#include "TimeBonus/API.sp"
 #include "TimeBonus/config.sp"
 #include "TimeBonus/UTIL.sp"
 #include "TimeBonus/Database.sp"
@@ -52,6 +51,8 @@ public void OnPluginStart()
     HookEvent("player_team", OnPlayerChangeTeam);
     
     g_hSync = CreateHudSynchronizer();
+    for(int i = 0; i < MaxClients; ++i)
+        g_hBlackListBonus[i] = new ArrayList();
     createConfig();
     createConvars();
     Database.Connect(createDB, "timebonus");
@@ -71,10 +72,6 @@ public void OnPluginEnd()
     UTIL_CleanMemory();
 }
 
-public void OnAllPluginsLoaded()
-{
-    //API_MarkAsReady(); // API ready to use
-}
 
 public Action command_Bonus(int iClient, int args)
 {
@@ -122,8 +119,9 @@ public Action checkTime(Handle timer)
         {
             if(g_bDisplayHud[iClient])
                 SetHudTextParams(0.75, 0.9, 1.5, 255, 255, 255, 255, 0, 0.0, 0.0, 0.0);
-
-            if(UTIL_checkValidIndex(g_iNextTime[iClient]))
+            if(UTIL_isBannedIndex(iClient, g_iNextTime[iClient]))
+                ++g_iNextTime[iClient];
+            if(UTIL_checkValidIndex(g_iNextTime[iClient])) 
             {
                 playedTime = UTIL_getPlayedTime(iClient);
                 hCurrent = g_hConfig.Get(UTIL_Max(g_iNextTime[iClient], 0));
@@ -152,9 +150,13 @@ public Action checkTime(Handle timer)
                     g_iPrevTime[iClient] = UTIL_getIndexByConfigTime(currentPosTime);
                     StartFindGift(iClient, hCurrent); 
                 }
+            } else {
+                if(UTIL_checkNonCompleteTime(iClient))
+                    return Plugin_Handled;
+
+                if(g_bDisplayHud[iClient])
+                    ShowSyncHudText(iClient, g_hSync, "Вы получили все бонусы на сегодня, поздравляем!");
             }
-            else
-                ShowSyncHudText(iClient, g_hSync, "Вы получили все бонусы на сегодня, поздравляем!");
         }
     }
     return Plugin_Continue;

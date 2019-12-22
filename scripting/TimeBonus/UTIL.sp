@@ -91,6 +91,32 @@ stock bool UTIL_checkValidIndex(const int index)
 	return (g_hConfig.Length > index) ? true : false;
 }
 
+stock bool UTIL_checkNonCompleteTime(int iClient)
+{
+	for(int i = 0, length = g_hConfig.Length; i < length; ++i)
+	{
+		if(UTIL_checkValidIndex(i)) continue;
+		g_iNextTime[iClient] = i;
+		return true;
+	}
+
+	return false;
+}
+
+stock bool UTIL_isBannedIndex(int iClient, int index)
+{
+	for(int i = 0, length = g_hBlackListBonus[iClient].Length; i < length; ++i)
+	{
+		if(index == g_hBlackListBonus[iClient].Get(i))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
 stock void UTIL_clearBlackList(int iClient)
 {
 	if(iClient)
@@ -99,22 +125,22 @@ stock void UTIL_clearBlackList(int iClient)
 
 /* Func by Kruzya, thx =) */
 void UTIL_FormatTime(int iTime, char[] szBuffer, int iMaxLength) {
-  int days = iTime / (60 * 60 * 24);
-  int hours = (iTime - (days * (60 * 60 * 24))) / (60 * 60);
-  int minutes = (iTime - (days * (60 * 60 * 24)) - (hours * (60 * 60))) / 60;
-  int seconds = iTime % 60;
-  int len;
+int days = iTime / (60 * 60 * 24);
+int hours = (iTime - (days * (60 * 60 * 24))) / (60 * 60);
+int minutes = (iTime - (days * (60 * 60 * 24)) - (hours * (60 * 60))) / 60;
+int seconds = iTime % 60;
+int len;
 
-  if (hours) {
-    len += Format(szBuffer[len], iMaxLength - len, "%d %s", hours, "час(ов)");
-  }
+if (hours) {
+	len += Format(szBuffer[len], iMaxLength - len, "%d %s", hours, "час(ов)");
+}
 
-  if (minutes) {
-    len += Format(szBuffer[len], iMaxLength - len, "%s%d %s", (hours) ? " " : "", minutes, "минут(ы)");
-  }
-  if (seconds) {
-    len += Format(szBuffer[len], iMaxLength - len, "%s%d %s", (hours || minutes) ? " " : "", seconds, "секунд(ы)");
-  }
+if (minutes) {
+	len += Format(szBuffer[len], iMaxLength - len, "%s%d %s", (hours) ? " " : "", minutes, "минут(ы)");
+}
+if (seconds) {
+	len += Format(szBuffer[len], iMaxLength - len, "%s%d %s", (hours || minutes) ? " " : "", seconds, "секунд(ы)");
+}
 }
 
 /* Too thx Kruzya for this func =) */
@@ -122,35 +148,30 @@ stock int UTIL_Max(int a, int b) { return a > b ? a : b; }
 
 stock bool UTIL_checkBlackListTime(int iClient, int time, char[] output, int maxLength)
 {
-	if(g_hBlackListBonus[iClient] == INVALID_HANDLE)	return false;
-	int lengthBlackList = g_hBlackListBonus[iClient].Length;
-	int blackListTime;
-	char blackList[20];
-	for(int i = 0; i < lengthBlackList; ++i)
+	if(!g_hBlackListBonus[iClient])	return false;
+
+	for(int i = 0, length = g_hBlackListBonus[iClient].Length; i < length; ++i)
 	{
-		g_hBlackListBonus[iClient].GetString(i, blackList, sizeof(blackList));
-		StringToInt(blackList, blackListTime);
-		if(time == blackListTime)
+		
+		if(g_hBlackListBonus[iClient].Get(i) == UTIL_getIndexByConfigTime(time))
 		{
-			FormatEx(output, maxLength, "%s", output, " [X]");
+			FormatEx(output, maxLength, "%s [Выкл]", output);
 			return true;
 		}
+		else
+		{
+			FormatEx(output, maxLength, "%s", output);
+		}
 	}
+
 	return false;
 }
 
 /* Check complete current time position or not */
-stock bool UTIL_checkExecutionTime(int time)
+stock bool UTIL_checkExecutionTime(int index, int iClient)
 {
-	int length = g_hConfig.Length;
-	int timeValue;
-	for(int i = 0; i < length; ++i)
-	{
-		view_as<StringMap>(g_hConfig.Get(i)).GetValue("Time", timeValue);
-		if(time == timeValue)
-			return true;
-	}
-
+	if(index <= g_iPrevTime[iClient])
+		return true;
 	return false;
 }
 

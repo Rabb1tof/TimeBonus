@@ -57,10 +57,12 @@ void UTIL_DrawGiftRoulette(int iClient, ArrayList hGifts)
 		(view_as<StringMap>(hGifts.Get(iGiftId))).GetString("Name", szGiftName[iGiftId], sizeof(szGiftName[]));
 	}
 
-	PrintHintText(
-		iClient, "%s | %s | [%s] | %s | %s",
+	CGOPrintHintText(
+		iClient, "%s | %s | [{red}%s{default}] | %s | %s",
 		szGiftName[0], szGiftName[1], szGiftName[2], szGiftName[3], szGiftName[4]
 	);
+
+	ClientCommand(iClient, "playgamesound ui/csgo_ui_crate_item_scroll.wav");
 }
 
 stock int UTIL_getTimeByConfigIndex(const int index)

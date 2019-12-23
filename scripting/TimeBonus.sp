@@ -64,7 +64,12 @@ public void OnPluginStart()
 
     CreateTimer(1.0, checkTime, _, TIMER_REPEAT);
 
-    UTIL_Debug();
+    //UTIL_Debug();
+}
+
+public void OnAutoConfigsBuffered()
+{
+	PrecacheSound("ui/csgo_ui_crate_item_scroll.wav");
 }
 
 public void OnPluginEnd()
@@ -118,7 +123,7 @@ public Action checkTime(Handle timer)
         if(IsValidClient(iClient) && !g_bIsTimerRunning[iClient])
         {
             if(g_bDisplayHud[iClient])
-                SetHudTextParams(0.75, 0.9, 1.5, 255, 255, 255, 255, 0, 0.0, 0.0, 0.0);
+                SetHudTextParams(-1.0, 0.9, 1.5, 255, 255, 255, 255, 0, 0.0, 0.0, 0.0);
             if(UTIL_isBannedIndex(iClient, g_iNextTime[iClient]))
                 ++g_iNextTime[iClient];
             if(UTIL_checkValidIndex(g_iNextTime[iClient])) 
@@ -177,7 +182,7 @@ public void OnClientDisconnect(int iClient)
     saveData(iClient);
 }
 
-void UTIL_Debug()
+/*void UTIL_Debug()
 {
     // g_hConfig - ArrayList
     StringMap hReadVal;
@@ -201,7 +206,7 @@ void UTIL_Debug()
             PrintToServer("GIFT -> %s", szName);
         }
     }
-}
+}*/
 
 
 // Примерный алгоритм рандома:
@@ -292,6 +297,7 @@ public Action GiftTimer(Handle hTimer, DataPack hPack)
     if (iSuccessChances == -10)
     {
         g_bIsTimerRunning[iClient] = false;
+        ClientCommand(iClient, "playgamesound ui/csgo_ui_crate_item_scroll.wav");
         giveBonus(iClient, hGifts.Get(2));
         hGifts.Close();
 

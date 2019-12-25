@@ -26,9 +26,37 @@ stock int UTIL_getPlayedTime(int iClient)
 
 stock void UTIL_checkTime()
 {
-	int iTime = GetTime();
-	if(iTime / (60 * 60 * 24) == 0)
-		resetTime();
+	char sExplodeString[2][16], sTime[16];
+	ExplodeString(g_szTime, " - ", sExplodeString, sizeof(sExplodeString), sizeof(sExplodeString[]));
+	FormatTime(sTime, sizeof(sTime), "%H:%M:%S");
+	
+	int iTime[3], iTimeStart[3], iTimeEnd[3];
+	UTIL_GetTimeStringToInt(sTime, iTime);
+	UTIL_GetTimeStringToInt(sExplodeString[0], iTimeStart);
+	UTIL_GetTimeStringToInt(sExplodeString[1], iTimeEnd);
+	
+	if((iTime[0] >= iTimeStart[0] && iTime[0] <= iTimeEnd[0]) ||
+		(iTime[0] == iTimeStart[0] && iTime[1] >= iTimeStart[1]) ||
+		(iTime[0] == iTimeEnd[0] && iTime[1] <= iTimeEnd[1]))
+	{
+		g_isPluginEnable = true;
+	}
+	else
+	{
+		if(g_isPluginEnable){
+			g_isPluginEnable = false;
+			resetTime();
+		}
+	}
+}
+
+int UTIL_GetTimeStringToInt(char[] sTime, int iTime[3])
+{
+    char sExplodeString[3][4];
+    ExplodeString(sTime, ":", sExplodeString, sizeof(sExplodeString), sizeof(sExplodeString[]));
+    for(int i; i < 3; i++) iTime[i] = StringToInt(sExplodeString[i]);
+    
+    return iTime;
 }
 
 #define _FLOATCOMP_LOWER	-1
@@ -57,8 +85,9 @@ void UTIL_DrawGiftRoulette(int iClient, ArrayList hGifts)
 		(view_as<StringMap>(hGifts.Get(iGiftId))).GetString("Name", szGiftName[iGiftId], sizeof(szGiftName[]));
 	}
 
-	CGOPrintHintText(
-		iClient, "%s | %s | [{red}%s{default}] | %s | %s",
+	PrintHintText(
+		iClient, "<font color='#35ce27'> TimeBonus</font>\n\n \
+		%s | %s | [<font color='#FF0000'>%s</font>] | %s | %s",
 		szGiftName[0], szGiftName[1], szGiftName[2], szGiftName[3], szGiftName[4]
 	);
 

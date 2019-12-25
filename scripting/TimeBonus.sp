@@ -6,7 +6,7 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define VERS_PLUGIN "1.0.7"
+#define VERS_PLUGIN "1.0.8"
 
 #pragma newdecls required
 #pragma semicolon 1
@@ -25,7 +25,8 @@ public Plugin myinfo =
 
 // global variable (from bool to Handle)
 bool    g_bIsTimerRunning[MAXPLAYERS+1] = {false, ...},
-        g_bDisplayHud[MAXPLAYERS+1] = {true, ...};
+        g_bDisplayHud[MAXPLAYERS+1] = {true, ...},
+        g_isPluginEnable = false;
 int g_iAccountID[MAXPLAYERS+1], g_iBonuses[MAXPLAYERS+1], g_iTime[MAXPLAYERS+1], g_iNonFixedTime[MAXPLAYERS+1], g_iNextTime[MAXPLAYERS+1], g_iPrevTime[MAXPLAYERS+1] = -1;
 Database g_hDB;
 ArrayList g_hConfig;
@@ -102,19 +103,25 @@ public Action nonFixedTime(Handle timer, int iClient)
     if(timer != INVALID_HANDLE)
     {
         iClient = GetClientOfUserId(iClient);
-        int team = GetClientTeam(iClient);
-        if(team > 1) 
+        if(IsValidClient(iClient))
         {
-            CloseHandle(timer);
-            return Plugin_Stop;
+            int team = GetClientTeam(iClient);
+            if(team != 1) 
+            {
+                CloseHandle(timer);
+                return Plugin_Stop;
+            }
+            ++g_iNonFixedTime[iClient];
+            return Plugin_Continue;
         }
-        ++g_iNonFixedTime[iClient];
     }
     return Plugin_Stop;
 }
 
 public Action checkTime(Handle timer)
 {
+    UTIL_checkTime();
+    
     int playedTime, currentPosTime;
     char name[64], sTime[64];
     StringMap hCurrent;

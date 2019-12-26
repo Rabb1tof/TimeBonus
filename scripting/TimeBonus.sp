@@ -62,7 +62,6 @@ public void OnPluginStart()
     BuildPath(Path_SM, szPath, sizeof(szPath), "configs/timebonus");
     if(!DirExists(szPath))
         CreateDirectory(szPath, FPERM_O_WRITE | FPERM_O_READ | FPERM_O_EXEC);
-
     CreateTimer(1.0, checkTime, _, TIMER_REPEAT);
 
     //UTIL_Debug();
@@ -90,7 +89,7 @@ public Action command_Bonus(int iClient, int args)
 public void OnPlayerChangeTeam(Event event, const char[] name, bool dbc)
 {
     int iClient = GetClientOfUserId(event.GetInt("userid"));
-    if(IsValidClient(iClient))
+    if(IsValidClient(iClient) && g_isPluginEnable)
     {
         int team    = event.GetInt("team");
         if(team == 1)
@@ -120,6 +119,8 @@ public Action nonFixedTime(Handle timer, int iClient)
 
 public Action checkTime(Handle timer)
 {
+    if(!g_isPluginEnable) return Plugin_Handled;
+
     UTIL_checkTime();
     
     int playedTime, currentPosTime;
@@ -131,8 +132,13 @@ public Action checkTime(Handle timer)
         {
             if(g_bDisplayHud[iClient])
                 SetHudTextParams(-1.0, 0.9, 1.5, 255, 255, 255, 255, 0, 0.0, 0.0, 0.0);
+
             if(UTIL_isBannedIndex(iClient, g_iNextTime[iClient]))
+            {
                 ++g_iNextTime[iClient];
+                return Plugin_Handled;
+            }
+
             if(UTIL_checkValidIndex(g_iNextTime[iClient])) 
             {
                 playedTime = UTIL_getPlayedTime(iClient);
@@ -144,12 +150,12 @@ public Action checkTime(Handle timer)
                 {
                     if(g_bDisplayHud[iClient])
                     {
-                        if(UTIL_getTimeByConfigIndex(g_iPrevTime[iClient]) == UTIL_getTimeByConfigIndex(g_iNextTime[iClient]))
+                        /*if(UTIL_getTimeByConfigIndex(g_iPrevTime[iClient]) == UTIL_getTimeByConfigIndex(g_iNextTime[iClient]))
                         {
                             LogError("checkTime()::Failed get time by index (previus and next time pos was equal):: Previus: %d | Next: %d.", 
                                 g_iPrevTime[iClient], g_iNextTime[iClient]);
                             return Plugin_Handled;
-                        }
+                        }*/
 
                         //g_iNextTime[iClient] = UTIL_getIndexByConfigTime(currentPosTime);
                         UTIL_FormatTime(currentPosTime*60 - playedTime, sTime, sizeof(sTime));
@@ -159,7 +165,7 @@ public Action checkTime(Handle timer)
                 
                 if(playedTime >= currentPosTime*60)
                 {
-                    g_iPrevTime[iClient] = UTIL_getIndexByConfigTime(currentPosTime);
+                    //g_iPrevTime[iClient] = UTIL_getIndexByConfigTime(currentPosTime);
                     StartFindGift(iClient, hCurrent); 
                 }
             } else {
@@ -225,7 +231,8 @@ stock void StartFindGift(int iClient, StringMap hMap)
     ArrayList hGifts = new ArrayList(4);
     ArrayList hFullGiftList;
     StringMap hGift;
-
+    char name[64];
+    hMap.GetString("name", name, sizeof(name));
     hMap.GetValue("gifts", hFullGiftList);
     while (hGifts.Length < 5)
     {
@@ -237,7 +244,7 @@ stock void StartFindGift(int iClient, StringMap hMap)
         }
     }
 
-    RunGiftTimer(iClient, hGifts, GetRandomInt(15, 30));
+    RunGiftTimer(iClient, hGifts, GetRandomInt(15, 30), name);
 }
 
 stock StringMap FindGiftByChance(ArrayList hStorage, float flLuckyChance = -1.0)
@@ -267,7 +274,7 @@ stock StringMap FindGiftByChance(ArrayList hStorage, float flLuckyChance = -1.0)
     return hGift;
 }
 
-void RunGiftTimer(int iClient, ArrayList hGifts, int iSuccessChances)
+void RunGiftTimer(int iClient, ArrayList hGifts, int iSuccessChances, char[] name)
 {
     DataPack hPack;
     float flTime = 0.2;
@@ -280,6 +287,7 @@ void RunGiftTimer(int iClient, ArrayList hGifts, int iSuccessChances)
     hPack.WriteCell(GetClientUserId(iClient));
     hPack.WriteCell(hGifts);
     hPack.WriteCell(iSuccessChances);
+    hPack.WriteString(name);
 }
 
 /**
@@ -291,6 +299,8 @@ public Action GiftTimer(Handle hTimer, DataPack hPack)
     int iClient = GetClientOfUserId(hPack.ReadCell());
     ArrayList hGifts = hPack.ReadCell();
     int iSuccessChances = hPack.ReadCell();
+    char name[64];
+    hPack.ReadString(name, sizeof(name));
 
     g_bIsTimerRunning[iClient] = true;
 
@@ -311,9 +321,9 @@ public Action GiftTimer(Handle hTimer, DataPack hPack)
         return;
     }
 
-    UTIL_DrawGiftRoulette(iClient, hGifts);
+    UTIL_DrawGiftRoulette(iClient, hGifts, name);
     SortADTArrayCustom(hGifts, OnReorderGiftList);
-    RunGiftTimer(iClient, hGifts, iSuccessChances - 1);
+    RunGiftTimer(iClient, hGifts, iSuccessChances - 1, name);
 }
 
 public int OnReorderGiftList(int iIndexFirst, int iIndexTwo, Handle hArray, Handle hHndl /*not used*/)

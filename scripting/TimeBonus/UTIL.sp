@@ -77,7 +77,7 @@ stock int UTIL_CompareFloat(float flFirst, float flTwo, float flFault = 0.1)
 	return _FLOATCOMP_LOWER;
 }
 
-void UTIL_DrawGiftRoulette(int iClient, ArrayList hGifts)
+void UTIL_DrawGiftRoulette(int iClient, ArrayList hGifts, char[] name)
 {
 	char szGiftName[5][64];
 	for (int iGiftId; iGiftId < 5; ++iGiftId)
@@ -86,8 +86,8 @@ void UTIL_DrawGiftRoulette(int iClient, ArrayList hGifts)
 	}
 
 	PrintHintText(
-		iClient, "<font color='#35ce27'> TimeBonus</font>\n\n \
-		%s | %s | [<font color='#FF0000'>%s</font>] | %s | %s",
+		iClient, "<font color='#35ce27'> %s</font>\n\n \
+		%s | %s | [<font color='#FF0000'>%s</font>] | %s | %s", name,
 		szGiftName[0], szGiftName[1], szGiftName[2], szGiftName[3], szGiftName[4]
 	);
 
@@ -126,7 +126,7 @@ stock bool UTIL_checkNonCompleteTime(int iClient)
 {
 	for(int i = 0, length = g_hConfig.Length; i < length; ++i)
 	{
-		if(UTIL_checkValidIndex(i)) continue;
+		if(!UTIL_checkValidIndex(i) || UTIL_isBannedIndex(iClient, i)) continue;
 		g_iNextTime[iClient] = i;
 		return true;
 	}
@@ -201,7 +201,7 @@ stock bool UTIL_checkBlackListTime(int iClient, int time, char[] output, int max
 /* Check complete current time position or not */
 stock bool UTIL_checkExecutionTime(int index, int iClient)
 {
-	if(index <= g_iPrevTime[iClient])
+	if(index <= g_iNextTime[iClient]-1)
 		return true;
 	return false;
 }

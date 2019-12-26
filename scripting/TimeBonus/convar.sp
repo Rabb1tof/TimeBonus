@@ -13,6 +13,8 @@ void createConvars()
     
     g_hTimeVIP.AddChangeHook(OnTimeChanged);
     g_hWorkingTime.AddChangeHook(OnTimeWorkChanged);
+
+    AutoExecConfig(true, "core", "timebonus");
 }
 
 public void OnTimeChanged(ConVar cv, const char[] oldValue, const char[] newValue) { g_iTimeVIP = cv.IntValue; }

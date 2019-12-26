@@ -69,7 +69,8 @@ public int disableBonusHandler(Menu menu, MenuAction action, int iClient, int it
                 if(value != -1)
                 {
                     g_hBlackListBonus[iClient].Erase(value);
-                    g_iNextTime[iClient] = index;
+                    if(g_iNextTime[iClient] > index)
+                        g_iNextTime[iClient] = index;
                 }
             } else {
                 g_hBlackListBonus[iClient].Push(index);

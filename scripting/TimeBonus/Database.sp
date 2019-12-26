@@ -70,7 +70,7 @@ public void SQL_PreLoadDataCheck(Database hDB, DBResultSet hResult, const char[]
         if(hResult.RowCount == 0)
         {
             g_iBonuses[iClient] = g_iTime[iClient] = 0;
-            g_iPrevTime[iClient] = -1;
+            //g_iPrevTime[iClient] = -1;
             int time;
             view_as<StringMap>(g_hConfig.Get(0)).GetValue("Time", time);
             g_iNextTime[iClient] = UTIL_getIndexByConfigTime(time);
@@ -81,7 +81,7 @@ public void SQL_PreLoadDataCheck(Database hDB, DBResultSet hResult, const char[]
 
             g_iBonuses[iClient]     = hResult.FetchInt(0);
             g_iTime[iClient]        = hResult.FetchInt(1);
-            g_iPrevTime[iClient]    = hResult.FetchInt(2);
+            //g_iPrevTime[iClient]    = hResult.FetchInt(2);
             g_iNextTime[iClient]    = hResult.FetchInt(3);
 
             g_hDB.Format(szQuery, sizeof(szQuery), g_szSQL_UpdateData, szEscapedName, g_iAccountID[iClient]);
@@ -155,7 +155,7 @@ public void SQL_giveBonus(Database hDB, DBResultSet hResult, const char[] error,
         Shop_GiveClientCredits(iClient, credits);
 
     if(itemID > 0)
-        Shop_GiveClientItem(iClient, view_as<ItemId>(itemID));
+        Shop_GiveClientItem(iClient, view_as<ItemId>(itemID), Shop_GetItemValue(view_as<ItemId>(itemID)));
 
     if(value[0] != 0)
     {

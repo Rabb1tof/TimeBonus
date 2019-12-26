@@ -6,7 +6,7 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define VERS_PLUGIN "1.0.8"
+#define VERS_PLUGIN "1.1.0"
 
 #pragma newdecls required
 #pragma semicolon 1

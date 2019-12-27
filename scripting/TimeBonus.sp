@@ -161,12 +161,11 @@ public Action checkTime(Handle timer)
                         UTIL_FormatTime(currentPosTime*60 - playedTime, sTime, sizeof(sTime));
                         ShowSyncHudText(iClient, g_hSync, "До следующего бонуса: %s\nСледующий бонус: %s", sTime, name);
                     }
-                }
-                
-                if(playedTime >= currentPosTime*60)
-                {
-                    //g_iPrevTime[iClient] = UTIL_getIndexByConfigTime(currentPosTime);
-                    StartFindGift(iClient, hCurrent); 
+                    if(playedTime >= currentPosTime*60)
+                    {
+                        //g_iPrevTime[iClient] = UTIL_getIndexByConfigTime(currentPosTime);
+                        StartFindGift(iClient, hCurrent); 
+                    }
                 }
             } else {
                 if(UTIL_checkNonCompleteTime(iClient))

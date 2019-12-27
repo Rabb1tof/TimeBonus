@@ -148,12 +148,6 @@ stock bool UTIL_isBannedIndex(int iClient, int index)
 }
 
 
-stock void UTIL_clearBlackList(int iClient)
-{
-	if(iClient)
-		return;
-}
-
 /* Func by Kruzya, thx =) */
 void UTIL_FormatTime(int iTime, char[] szBuffer, int iMaxLength) {
 int days = iTime / (60 * 60 * 24);

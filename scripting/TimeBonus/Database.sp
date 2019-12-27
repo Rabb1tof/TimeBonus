@@ -181,5 +181,4 @@ public void SQL_giveBonus(Database hDB, DBResultSet hResult, const char[] error,
         CGOPrintToChatAll("%s получил вип-группу: {olive}%s {default} на {green}%d {default}минут", PREFIX, value, g_iTimeVIP/60);
 
     g_iNextTime[iClient]++;
-    UTIL_clearBlackList(iClient);
 }

@@ -16,7 +16,7 @@
 
 public Plugin myinfo =
 {
-    author = "Rabb1t (Discord: Rabb1t#2017)",
+    author = "Rabb1t (Discord: Rabb1t#4578)",
     name = "TimeBonus",
     version = VERS_PLUGIN,
     description = "Бонусы за время игры на сервере",

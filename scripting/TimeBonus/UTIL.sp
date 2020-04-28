@@ -150,22 +150,22 @@ stock bool UTIL_isBannedIndex(int iClient, int index)
 
 /* Func by Kruzya, thx =) */
 void UTIL_FormatTime(int iTime, char[] szBuffer, int iMaxLength) {
-int days = iTime / (60 * 60 * 24);
-int hours = (iTime - (days * (60 * 60 * 24))) / (60 * 60);
-int minutes = (iTime - (days * (60 * 60 * 24)) - (hours * (60 * 60))) / 60;
-int seconds = iTime % 60;
-int len;
+	int days = iTime / (60 * 60 * 24);
+	int hours = (iTime - (days * (60 * 60 * 24))) / (60 * 60);
+	int minutes = (iTime - (days * (60 * 60 * 24)) - (hours * (60 * 60))) / 60;
+	int seconds = iTime % 60;
+	int len;
 
-if (hours) {
-	len += Format(szBuffer[len], iMaxLength - len, "%d %s", hours, "час(ов)");
-}
+	if (hours) {
+		len += Format(szBuffer[len], iMaxLength - len, "%d %s", hours, "час(ов)");
+	}
 
-if (minutes) {
-	len += Format(szBuffer[len], iMaxLength - len, "%s%d %s", (hours) ? " " : "", minutes, "минут(ы)");
-}
-if (seconds) {
-	len += Format(szBuffer[len], iMaxLength - len, "%s%d %s", (hours || minutes) ? " " : "", seconds, "секунд(ы)");
-}
+	if (minutes) {
+		len += Format(szBuffer[len], iMaxLength - len, "%s%d %s", (hours) ? " " : "", minutes, "минут(ы)");
+	}
+	if (seconds) {
+		len += Format(szBuffer[len], iMaxLength - len, "%s%d %s", (hours || minutes) ? " " : "", seconds, "секунд(ы)");
+	}
 }
 
 /* Too thx Kruzya for this func =) */
